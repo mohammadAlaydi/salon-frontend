@@ -1,0 +1,1205 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "GLOWNOVA API",
+    "version": "0.1.0",
+    "description": "OpenAPI stub for the GLOWNOVA multi-tenant salon SaaS.\nThis contract is used primarily by the frontend and MSW mocks and must be kept in sync with the backend."
+  },
+  "servers": [
+    {
+      "url": "https://api.glownova.example.com",
+      "description": "Production API (placeholder URL)"
+    },
+    {
+      "url": "https://staging-api.glownova.example.com",
+      "description": "Staging API (placeholder URL)"
+    },
+    {
+      "url": "http://localhost:4000",
+      "description": "Local backend (when available)"
+    }
+  ],
+  "tags": [
+    { "name": "Auth" },
+    { "name": "Public" },
+    { "name": "Admin" },
+    { "name": "Reports" },
+    { "name": "Salon" },
+    { "name": "Webhooks" }
+  ],
+  "paths": {
+    "/auth/login": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Login with email and password",
+        "operationId": "login",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/LoginRequest" },
+              "examples": {
+                "demo": {
+                  "value": {
+                    "email": "admin@demo.local",
+                    "password": "Password123!"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AuthResponse" }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/refresh": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Refresh access token",
+        "operationId": "refreshToken",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/RefreshTokenRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "New access token issued",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RefreshTokenResponse" }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or expired refresh token",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Logout and invalidate refresh token",
+        "operationId": "logout",
+        "responses": {
+          "204": {
+            "description": "Logout successful"
+          }
+        }
+      }
+    },
+    "/public/services": {
+      "get": {
+        "tags": ["Public"],
+        "summary": "List public services for a salon",
+        "operationId": "listPublicServices",
+        "parameters": [
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": { "type": "string" },
+            "description": "Tenant/salon identifier. Optional when using host-based tenancy."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of services",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Service" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/public/staff": {
+      "get": {
+        "tags": ["Public"],
+        "summary": "List public staff with availability",
+        "operationId": "listPublicStaff",
+        "parameters": [
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "serviceId",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string", "format": "uuid" },
+            "description": "Filter availability for a specific service"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of staff profiles with availability",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/PublicStaffWithAvailability" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/public/appointments": {
+      "post": {
+        "tags": ["Public"],
+        "summary": "Create a public appointment booking",
+        "operationId": "createPublicAppointment",
+        "parameters": [
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": { "type": "string" },
+            "description": "Client-supplied idempotency key to prevent duplicate bookings"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/PublicAppointmentCreateRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Appointment created",
+            "headers": {
+              "Idempotent-Replay": {
+                "description": "Set to true if this response is from a previous idempotent call.",
+                "schema": { "type": "boolean" }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Appointment" }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicting booking or slot already taken",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/services": {
+      "get": {
+        "tags": ["Admin"],
+        "summary": "List services",
+        "operationId": "listServices",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "List of services",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Service" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Admin"],
+        "summary": "Create a service",
+        "operationId": "createService",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ServiceCreateRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Service created",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Service" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/services/{id}": {
+      "put": {
+        "tags": ["Admin"],
+        "summary": "Update a service",
+        "operationId": "updateService",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ServiceUpdateRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Service updated",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Service" }
+              }
+            }
+          },
+          "404": {
+            "description": "Service not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Admin"],
+        "summary": "Delete a service",
+        "operationId": "deleteService",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Service deleted"
+          },
+          "404": {
+            "description": "Service not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/staff": {
+      "get": {
+        "tags": ["Admin"],
+        "summary": "List staff",
+        "operationId": "listStaff",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "List of staff profiles",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/StaffProfile" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Admin"],
+        "summary": "Create staff profile",
+        "operationId": "createStaff",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/StaffCreateRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Staff profile created",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/StaffProfile" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/staff/{id}": {
+      "put": {
+        "tags": ["Admin"],
+        "summary": "Update staff profile",
+        "operationId": "updateStaff",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/StaffUpdateRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Staff profile updated",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/StaffProfile" }
+              }
+            }
+          },
+          "404": {
+            "description": "Staff not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/customers": {
+      "get": {
+        "tags": ["Admin"],
+        "summary": "List customers",
+        "operationId": "listCustomers",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "List of customers",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Customer" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Admin"],
+        "summary": "Create customer",
+        "operationId": "createCustomer",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CustomerCreateRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Customer created",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Customer" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/appointments": {
+      "get": {
+        "tags": ["Admin"],
+        "summary": "List appointments",
+        "operationId": "listAppointments",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "schema": { "type": "string", "format": "date-time" }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": { "type": "string", "format": "date-time" }
+          },
+          {
+            "name": "staffId",
+            "in": "query",
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": { "$ref": "#/components/schemas/AppointmentStatus" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of appointments",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Appointment" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Admin"],
+        "summary": "Create appointment",
+        "operationId": "createAppointment",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/AppointmentCreateRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Appointment created",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Appointment" }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicting appointment",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/appointments/{id}": {
+      "put": {
+        "tags": ["Admin"],
+        "summary": "Update appointment",
+        "operationId": "updateAppointment",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/AppointmentUpdateRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Appointment updated",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Appointment" }
+              }
+            }
+          },
+          "404": {
+            "description": "Appointment not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": ["Admin"],
+        "summary": "Update appointment status",
+        "operationId": "updateAppointmentStatus",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/AppointmentStatusUpdateRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Status updated",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Appointment" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/reports/daily": {
+      "get": {
+        "tags": ["Reports"],
+        "summary": "Daily report metrics",
+        "operationId": "getDailyReport",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "date",
+            "in": "query",
+            "schema": { "type": "string", "format": "date" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Daily report",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/DailyReport" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/salon": {
+      "get": {
+        "tags": ["Salon"],
+        "summary": "Get salon settings",
+        "operationId": "getSalon",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Salon details",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Salon" }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["Salon"],
+        "summary": "Update salon settings",
+        "operationId": "updateSalon",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/SalonUpdateRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Salon updated",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Salon" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/onboard": {
+      "post": {
+        "tags": ["Salon"],
+        "summary": "Onboard a new salon and initial admin user",
+        "operationId": "onboardSalon",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/SalonOnboardRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Salon onboarded",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SalonOnboardResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/webhooks/n8n/callback": {
+      "post": {
+        "tags": ["Webhooks"],
+        "summary": "Webhook callback endpoint for n8n",
+        "operationId": "n8nCallback",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/N8nCallbackPayload" }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Accepted"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "LoginRequest": {
+        "type": "object",
+        "required": ["email", "password"],
+        "properties": {
+          "email": { "type": "string", "format": "email" },
+          "password": { "type": "string", "minLength": 8 }
+        }
+      },
+      "AuthResponse": {
+        "type": "object",
+        "required": ["accessToken", "refreshToken", "user"],
+        "properties": {
+          "accessToken": { "type": "string" },
+          "refreshToken": { "type": "string" },
+          "user": { "$ref": "#/components/schemas/User" }
+        }
+      },
+      "RefreshTokenRequest": {
+        "type": "object",
+        "required": ["refreshToken"],
+        "properties": {
+          "refreshToken": { "type": "string" }
+        }
+      },
+      "RefreshTokenResponse": {
+        "type": "object",
+        "required": ["accessToken"],
+        "properties": {
+          "accessToken": { "type": "string" }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "required": ["message"],
+        "properties": {
+          "message": { "type": "string" },
+          "code": { "type": "string" },
+          "details": {
+            "type": "object",
+            "additionalProperties": {}
+          }
+        }
+      },
+      "Salon": {
+        "type": "object",
+        "required": ["id", "slug", "name"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "slug": { "type": "string" },
+          "name": { "type": "string" },
+          "address": { "type": "string" },
+          "phone": { "type": "string" },
+          "email": { "type": "string", "format": "email" },
+          "branding": { "$ref": "#/components/schemas/SalonBranding" },
+          "timezone": { "type": "string", "example": "Europe/Paris" }
+        }
+      },
+      "SalonBranding": {
+        "type": "object",
+        "properties": {
+          "primaryColor": { "type": "string", "example": "#E6A4B4" },
+          "secondaryColor": { "type": "string", "example": "#A8C3A2" },
+          "backgroundColor": { "type": "string", "example": "#FAF7F5" },
+          "logoUrl": { "type": "string", "format": "uri" },
+          "darkModeEnabled": { "type": "boolean" }
+        }
+      },
+      "SalonUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "address": { "type": "string" },
+          "phone": { "type": "string" },
+          "email": { "type": "string", "format": "email" },
+          "branding": { "$ref": "#/components/schemas/SalonBranding" },
+          "n8nWebhookUrl": { "type": "string", "format": "uri" }
+        }
+      },
+      "SalonOnboardRequest": {
+        "type": "object",
+        "required": ["salonName", "slug", "adminEmail", "adminPassword"],
+        "properties": {
+          "salonName": { "type": "string" },
+          "slug": { "type": "string" },
+          "adminEmail": { "type": "string", "format": "email" },
+          "adminPassword": { "type": "string", "minLength": 8 }
+        }
+      },
+      "SalonOnboardResponse": {
+        "type": "object",
+        "required": ["salon", "adminUser", "auth"],
+        "properties": {
+          "salon": { "$ref": "#/components/schemas/Salon" },
+          "adminUser": { "$ref": "#/components/schemas/User" },
+          "auth": { "$ref": "#/components/schemas/AuthResponse" }
+        }
+      },
+      "User": {
+        "type": "object",
+        "required": ["id", "email", "role"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "email": { "type": "string", "format": "email" },
+          "role": {
+            "type": "string",
+            "enum": ["ADMIN", "STAFF"]
+          },
+          "name": { "type": "string" },
+          "avatarUrl": { "type": "string", "format": "uri" },
+          "salonId": { "type": "string", "format": "uuid" }
+        }
+      },
+      "Customer": {
+        "type": "object",
+        "required": ["id", "salonId", "name"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "salonId": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" },
+          "email": { "type": "string", "format": "email" },
+          "phone": { "type": "string" },
+          "notes": { "type": "string" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "CustomerCreateRequest": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name": { "type": "string" },
+          "email": { "type": "string", "format": "email" },
+          "phone": { "type": "string" },
+          "notes": { "type": "string" }
+        }
+      },
+      "Service": {
+        "type": "object",
+        "required": ["id", "salonId", "name", "durationMinutes", "priceCents"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "salonId": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "durationMinutes": { "type": "integer", "minimum": 5 },
+          "priceCents": { "type": "integer", "minimum": 0 },
+          "currency": { "type": "string", "example": "USD" },
+          "isActive": { "type": "boolean", "default": true }
+        }
+      },
+      "ServiceCreateRequest": {
+        "type": "object",
+        "required": ["name", "durationMinutes", "priceCents"],
+        "properties": {
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "durationMinutes": { "type": "integer" },
+          "priceCents": { "type": "integer" },
+          "currency": { "type": "string" }
+        }
+      },
+      "ServiceUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "durationMinutes": { "type": "integer" },
+          "priceCents": { "type": "integer" },
+          "currency": { "type": "string" },
+          "isActive": { "type": "boolean" }
+        }
+      },
+      "StaffProfile": {
+        "type": "object",
+        "required": ["id", "salonId", "name"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "salonId": { "type": "string", "format": "uuid" },
+          "userId": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" },
+          "bio": { "type": "string" },
+          "avatarUrl": { "type": "string", "format": "uri" },
+          "skills": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "rating": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 5
+          },
+          "workingHours": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/WorkingHours" }
+          }
+        }
+      },
+      "StaffCreateRequest": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name": { "type": "string" },
+          "email": { "type": "string", "format": "email" },
+          "bio": { "type": "string" },
+          "skills": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      },
+      "StaffUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "bio": { "type": "string" },
+          "skills": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "rating": { "type": "number" },
+          "workingHours": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/WorkingHours" }
+          }
+        }
+      },
+      "WorkingHours": {
+        "type": "object",
+        "required": ["dayOfWeek", "startTime", "endTime"],
+        "properties": {
+          "dayOfWeek": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 6,
+            "description": "0 = Sunday, 6 = Saturday"
+          },
+          "startTime": {
+            "type": "string",
+            "example": "09:00"
+          },
+          "endTime": {
+            "type": "string",
+            "example": "17:00"
+          },
+          "breaks": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/WorkingHoursBreak" }
+          }
+        }
+      },
+      "WorkingHoursBreak": {
+        "type": "object",
+        "required": ["startTime", "endTime"],
+        "properties": {
+          "startTime": { "type": "string", "example": "12:00" },
+          "endTime": { "type": "string", "example": "13:00" }
+        }
+      },
+      "AppointmentStatus": {
+        "type": "string",
+        "enum": ["PENDING", "CONFIRMED", "COMPLETED", "CANCELLED", "NO_SHOW"]
+      },
+      "Appointment": {
+        "type": "object",
+        "required": [
+          "id",
+          "salonId",
+          "serviceId",
+          "staffId",
+          "customerId",
+          "startTime",
+          "endTime",
+          "status"
+        ],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "salonId": { "type": "string", "format": "uuid" },
+          "serviceId": { "type": "string", "format": "uuid" },
+          "staffId": { "type": "string", "format": "uuid" },
+          "customerId": { "type": "string", "format": "uuid" },
+          "startTime": { "type": "string", "format": "date-time" },
+          "endTime": { "type": "string", "format": "date-time" },
+          "status": { "$ref": "#/components/schemas/AppointmentStatus" },
+          "notes": { "type": "string" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" },
+          "source": {
+            "type": "string",
+            "enum": ["ADMIN", "PUBLIC"]
+          }
+        }
+      },
+      "AppointmentCreateRequest": {
+        "type": "object",
+        "required": [
+          "serviceId",
+          "staffId",
+          "customerId",
+          "startTime",
+          "endTime"
+        ],
+        "properties": {
+          "serviceId": { "type": "string", "format": "uuid" },
+          "staffId": { "type": "string", "format": "uuid" },
+          "customerId": { "type": "string", "format": "uuid" },
+          "startTime": { "type": "string", "format": "date-time" },
+          "endTime": { "type": "string", "format": "date-time" },
+          "notes": { "type": "string" }
+        }
+      },
+      "AppointmentUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "serviceId": { "type": "string", "format": "uuid" },
+          "staffId": { "type": "string", "format": "uuid" },
+          "customerId": { "type": "string", "format": "uuid" },
+          "startTime": { "type": "string", "format": "date-time" },
+          "endTime": { "type": "string", "format": "date-time" },
+          "notes": { "type": "string" },
+          "status": { "$ref": "#/components/schemas/AppointmentStatus" }
+        }
+      },
+      "AppointmentStatusUpdateRequest": {
+        "type": "object",
+        "required": ["status"],
+        "properties": {
+          "status": { "$ref": "#/components/schemas/AppointmentStatus" }
+        }
+      },
+      "PublicAppointmentCreateRequest": {
+        "type": "object",
+        "required": [
+          "serviceId",
+          "staffId",
+          "startTime",
+          "customer"
+        ],
+        "properties": {
+          "serviceId": { "type": "string", "format": "uuid" },
+          "staffId": { "type": "string", "format": "uuid" },
+          "startTime": { "type": "string", "format": "date-time" },
+          "notes": { "type": "string" },
+          "customer": {
+            "type": "object",
+            "required": ["name", "phone"],
+            "properties": {
+              "name": { "type": "string" },
+              "email": { "type": "string", "format": "email" },
+              "phone": { "type": "string" }
+            }
+          }
+        }
+      },
+      "PublicStaffWithAvailability": {
+        "type": "object",
+        "required": ["staff", "availability"],
+        "properties": {
+          "staff": { "$ref": "#/components/schemas/StaffProfile" },
+          "availability": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/AvailabilitySlot" }
+          }
+        }
+      },
+      "AvailabilitySlot": {
+        "type": "object",
+        "required": ["startTime", "endTime"],
+        "properties": {
+          "startTime": { "type": "string", "format": "date-time" },
+          "endTime": { "type": "string", "format": "date-time" },
+          "isReserved": {
+            "type": "boolean",
+            "description": "True when temporarily reserved in a pending booking."
+          }
+        }
+      },
+      "DailyReport": {
+        "type": "object",
+        "required": ["date"],
+        "properties": {
+          "date": { "type": "string", "format": "date" },
+          "totalRevenueCents": { "type": "integer" },
+          "totalAppointments": { "type": "integer" },
+          "noShowCount": { "type": "integer" },
+          "topServices": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/TopServiceMetric" }
+          }
+        }
+      },
+      "TopServiceMetric": {
+        "type": "object",
+        "required": ["serviceId", "count"],
+        "properties": {
+          "serviceId": { "type": "string", "format": "uuid" },
+          "count": { "type": "integer" },
+          "revenueCents": { "type": "integer" }
+        }
+      },
+      "NotificationLog": {
+        "type": "object",
+        "required": ["id", "appointmentId", "type", "status"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "appointmentId": { "type": "string", "format": "uuid" },
+          "type": {
+            "type": "string",
+            "enum": ["EMAIL", "SMS", "WHATSAPP", "WEBHOOK"]
+          },
+          "status": {
+            "type": "string",
+            "enum": ["PENDING", "SENT", "FAILED"]
+          },
+          "payload": {
+            "type": "object",
+            "additionalProperties": {}
+          },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "N8nCallbackPayload": {
+        "type": "object",
+        "properties": {
+          "event": { "type": "string" },
+          "appointmentId": { "type": "string", "format": "uuid" },
+          "status": { "type": "string" },
+          "meta": {
+            "type": "object",
+            "additionalProperties": {}
+          }
+        }
+      }
+    }
+  }
+}
+
+
