@@ -41,7 +41,7 @@ export default function Home() {
             >
               Start Booking
             </Link>
-          </div>
+        </div>
         </section>
 
         <footer className="text-center text-xs text-muted-foreground">
