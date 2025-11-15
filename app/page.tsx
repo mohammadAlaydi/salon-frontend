@@ -1,64 +1,55 @@
-import Image from "next/image";
+"use client";
+
+import Link from "next/link";
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <div className="min-h-screen bg-glownova-bg flex items-center justify-center px-4">
+      <main className="w-full max-w-3xl rounded-2xl bg-white shadow-card p-8 md:p-12">
+        <header className="mb-8 text-center">
+          <div className="mb-3 text-4xl">🌸</div>
+          <h1 className="font-heading text-4xl md:text-5xl font-bold text-glownova-primary">
+            GLOWNOVA
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="mt-3 text-sm md:text-base text-muted-foreground">
+            Multi-tenant salon management with a beautiful booking experience.
           </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+        </header>
+
+        <section className="grid gap-4 md:grid-cols-2 mb-10">
+          <div className="rounded-xl border border-border bg-glownova-surface/40 p-4">
+            <h2 className="font-semibold mb-2">Admin</h2>
+            <p className="text-sm text-muted-foreground mb-4">
+              Manage services, staff, customers, appointments, and reports.
+            </p>
+            <Link
+              href="/admin/login"
+              className="inline-flex w-full items-center justify-center rounded-md bg-glownova-primary px-4 py-2 text-sm font-medium text-white hover:bg-glownova-primary-dark transition-colors"
+            >
+              Go to Admin Login
+            </Link>
+          </div>
+
+          <div className="rounded-xl border border-border bg-glownova-surface/40 p-4">
+            <h2 className="font-semibold mb-2">Public Booking</h2>
+            <p className="text-sm text-muted-foreground mb-4">
+              Let clients discover your services and book appointments online.
+            </p>
+            <Link
+              href="/booking/services"
+              className="inline-flex w-full items-center justify-center rounded-md border border-border px-4 py-2 text-sm font-medium text-glownova-primary hover:bg-glownova-primary/10 transition-colors"
+            >
+              Start Booking
+            </Link>
+          </div>
+        </section>
+
+        <footer className="text-center text-xs text-muted-foreground">
+          Demo salon:{" "}
+          <Link href="/demo-salon" className="underline hover:text-glownova-primary-dark">
+            /demo-salon
+          </Link>
+        </footer>
       </main>
     </div>
   );
