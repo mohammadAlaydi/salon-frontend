@@ -1,4 +1,6 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 /* GLOWNOVA Design Tokens */
 @layer base {
@@ -89,46 +91,6 @@
     --border: 38 38 38;
     --input: 38 38 38;
   }
-}
-
-@theme inline {
-  /* Map tokens to Tailwind utilities */
-  --color-glownova-primary: rgb(var(--color-primary) / <alpha-value>);
-  --color-glownova-primary-dark: rgb(var(--color-primary-dark) / <alpha-value>);
-  --color-glownova-secondary: rgb(var(--color-secondary) / <alpha-value>);
-  --color-glownova-bg: rgb(var(--color-bg) / <alpha-value>);
-  --color-glownova-surface: rgb(var(--color-surface) / <alpha-value>);
-  --color-glownova-text: rgb(var(--color-text) / <alpha-value>);
-  --color-glownova-text-muted: rgb(var(--color-text-muted) / <alpha-value>);
-  --color-status-success: rgb(var(--color-success) / <alpha-value>);
-  --color-status-warning: rgb(var(--color-warning) / <alpha-value>);
-  --color-status-error: rgb(var(--color-error) / <alpha-value>);
-  --color-status-info: rgb(var(--color-info) / <alpha-value>);
-
-  /* shadcn colors */
-  --color-background: rgb(var(--background) / <alpha-value>);
-  --color-foreground: rgb(var(--foreground) / <alpha-value>);
-  --color-card: rgb(var(--card) / <alpha-value>);
-  --color-card-foreground: rgb(var(--card-foreground) / <alpha-value>);
-  --color-popover: rgb(var(--popover) / <alpha-value>);
-  --color-popover-foreground: rgb(var(--popover-foreground) / <alpha-value>);
-  --color-primary: rgb(var(--primary) / <alpha-value>);
-  --color-primary-foreground: rgb(var(--primary-foreground) / <alpha-value>);
-  --color-secondary: rgb(var(--secondary) / <alpha-value>);
-  --color-secondary-foreground: rgb(var(--secondary-foreground) / <alpha-value>);
-  --color-muted: rgb(var(--muted) / <alpha-value>);
-  --color-muted-foreground: rgb(var(--muted-foreground) / <alpha-value>);
-  --color-accent: rgb(var(--accent) / <alpha-value>);
-  --color-accent-foreground: rgb(var(--accent-foreground) / <alpha-value>);
-  --color-destructive: rgb(var(--destructive) / <alpha-value>);
-  --color-destructive-foreground: rgb(var(--destructive-foreground) / <alpha-value>);
-  --color-border: rgb(var(--border) / <alpha-value>);
-  --color-input: rgb(var(--input) / <alpha-value>);
-  --color-ring: rgb(var(--ring) / <alpha-value>);
-
-  /* Font families */
-  --font-sans: var(--font-inter), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-heading: var(--font-playfair), "Times New Roman", serif;
 }
 
 @layer base {

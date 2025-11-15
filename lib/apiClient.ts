@@ -35,7 +35,8 @@ export function setOnAuthError(callback: () => void) {
 }
 
 // Tenant ID (will be set by useTenant hook)
-let tenantId: string | null = null;
+// Default to "demo-salon" for local development
+let tenantId: string | null = typeof window !== "undefined" ? "demo-salon" : null;
 
 export function setTenantId(id: string | null) {
   tenantId = id;
@@ -114,9 +115,16 @@ export async function apiRequest<T>(
     headers["Authorization"] = `Bearer ${accessToken}`;
   }
 
-  // Add tenant ID if available
-  if (tenantId) {
-    headers["X-Tenant-ID"] = tenantId;
+  // Add tenant ID - always include default for local development
+  const finalTenantId = tenantId || "demo-salon";
+  headers["X-Tenant-ID"] = finalTenantId;
+
+  // Debug logging (remove in production)
+  if (process.env.NODE_ENV === "development") {
+    console.log(`[API Request] ${options.method || "GET"} ${endpoint}`, {
+      "X-Tenant-ID": finalTenantId,
+      hasAccessToken: !!accessToken,
+    });
   }
 
   const url = `${API_BASE_URL}${endpoint}`;
@@ -166,7 +174,29 @@ export async function apiRequest<T>(
       return undefined as T;
     }
 
-    return (await response.json()) as T;
+    // Check if response has content
+    const contentType = response.headers.get("content-type");
+    const text = await response.text();
+    
+    if (!text || text.trim() === "") {
+      return undefined as T;
+    }
+
+    // Try to parse as JSON
+    try {
+      return JSON.parse(text) as T;
+    } catch (parseError) {
+      // If parsing fails and we expected JSON, throw an error
+      if (contentType && contentType.includes("application/json")) {
+        throw new ApiError(
+          response.status,
+          "INVALID_JSON_RESPONSE",
+          { message: "Response was not valid JSON" }
+        );
+      }
+      // Otherwise return undefined
+      return undefined as T;
+    }
   } catch (error) {
     if (error instanceof ApiError) {
       throw error;

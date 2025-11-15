@@ -25,8 +25,10 @@ export function useTenant() {
       }
 
       // 2. Extract from pathname (e.g., /[salonSlug]/...)
+      // Skip common non-salon paths
       const pathParts = url.pathname.split("/").filter(Boolean);
-      if (pathParts.length > 0 && !pathParts[0].startsWith("admin")) {
+      const excludedPaths = ["admin", "booking", "login", "api", "auth"];
+      if (pathParts.length > 0 && !excludedPaths.includes(pathParts[0])) {
         return pathParts[0];
       }
 
